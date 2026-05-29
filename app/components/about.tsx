@@ -1,54 +1,32 @@
-'use client';
-
-import { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+const stats = [
+  { num: '3+', label: 'Years learning to code' },
+  { num: '10+', label: 'Projects completed' },
+  { num: '\u221e', label: 'Lines of code written' },
+];
 
 export default function About() {
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from('.about-left', {
-        x: -60,
-        opacity: 0,
-        duration: 1,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: '.about-left',
-          start: 'top 80%',
-        },
-      });
-      gsap.from('.about-right', {
-        x: 60,
-        opacity: 0,
-        duration: 1,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: '.about-right',
-          start: 'top 80%',
-        },
-      });
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
-
   return (
     <section
-      ref={sectionRef}
       id="about"
-      className="relative z-10 min-h-screen flex items-center px-8 md:px-16 py-24"
+      className="relative z-10 flex min-h-screen items-center px-8 py-24 md:px-16"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-16 w-full max-w-6xl mx-auto">
-        <div className="about-left flex flex-col gap-6">
-          <p className="text-[10px] tracking-[0.4em] uppercase text-white/30">
-            — About
+      <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-16 md:grid-cols-2">
+        <div
+          data-scroll-effect="slide-right"
+          data-parallax="0.08"
+          className="about-left flex flex-col gap-6"
+        >
+          <p className="text-[10px] uppercase tracking-[0.4em] text-white/30">
+            &mdash; About
           </p>
           <h2 className="heading-lg text-white">
-            Curious<br />Mind,<br />Clean<br />Code.
+            Curious
+            <br />
+            Mind,
+            <br />
+            Clean
+            <br />
+            Code.
           </h2>
           <p className="text-sm leading-relaxed text-white/50">
             A dedicated student developer passionate about crafting digital experiences.
@@ -61,19 +39,21 @@ export default function About() {
           </p>
         </div>
 
-        <div className="about-right flex flex-col gap-4">
-          {[
-            { num: '3+', label: 'Years learning to code' },
-            { num: '10+', label: 'Projects completed' },
-            { num: '∞', label: 'Lines of code written' },
-          ].map((stat) => (
+        <div
+          data-scroll-effect="slide-left"
+          data-parallax="0.04"
+          className="about-right flex flex-col gap-4"
+        >
+          {stats.map((stat, index) => (
             <div
               key={stat.label}
-              className="border border-white/10 p-6 relative overflow-hidden group"
+              data-scroll-effect="zoom"
+              data-scroll-delay={index * 0.08}
+              className="group relative overflow-hidden border border-white/10 p-6"
             >
-              <div className="absolute top-0 left-0 w-[3px] h-0 bg-white group-hover:h-full transition-all duration-500" />
+              <div className="absolute left-0 top-0 h-0 w-[3px] bg-white transition-all duration-500 group-hover:h-full" />
               <p className="heading-md text-white">{stat.num}</p>
-              <p className="text-[11px] tracking-[0.2em] uppercase text-white/40 mt-1">
+              <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-white/40">
                 {stat.label}
               </p>
             </div>

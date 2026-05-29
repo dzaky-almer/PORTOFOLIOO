@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Inter, Anton } from 'next/font/google';
-import SmoothScroll from './components/SmoothScroll';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -19,7 +18,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={`${inter.variable} ${anton.variable}`}>
-        <SmoothScroll />
         {children}
       </body>
     </html>

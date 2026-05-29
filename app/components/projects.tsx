@@ -1,11 +1,3 @@
-'use client';
-
-import { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
-
 const projects = [
   {
     num: '001',
@@ -39,62 +31,46 @@ const projects = [
 ];
 
 export default function Projects() {
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from('.project-card', {
-        y: 60,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.15,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: '.projects-grid',
-          start: 'top 80%',
-        },
-      });
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
-
   return (
     <section
-      ref={sectionRef}
       id="projects"
-      className="relative z-10 min-h-screen flex items-center px-8 md:px-16 py-24"
+      className="relative z-10 flex min-h-screen items-center px-8 py-24 md:px-16"
     >
-      <div className="w-full max-w-6xl mx-auto">
-        <p className="text-[10px] tracking-[0.4em] uppercase text-white/30 mb-12">
-          — Projects
+      <div className="mx-auto w-full max-w-6xl">
+        <p
+          data-scroll-effect="fade"
+          className="mb-12 text-[10px] uppercase tracking-[0.4em] text-white/30"
+        >
+          &mdash; Projects
         </p>
 
-        <div className="projects-grid grid grid-cols-1 md:grid-cols-2 gap-[1px] bg-white/8">
-          {projects.map((project) => (
+        <div className="projects-grid grid grid-cols-1 gap-[1px] bg-white/8 md:grid-cols-2">
+          {projects.map((project, index) => (
             <div
               key={project.num}
-              className={`project-card bg-black p-8 flex flex-col gap-4 relative group transition-colors duration-300 ${
-                project.disabled ? 'opacity-40 cursor-default' : 'hover:bg-white/5 cursor-pointer'
+              data-scroll-effect={index % 2 === 0 ? 'rotate' : 'slide-up'}
+              data-scroll-delay={index * 0.06}
+              className={`project-card group relative flex flex-col gap-4 bg-black p-8 transition-colors duration-300 ${
+                project.disabled ? 'cursor-default opacity-40' : 'cursor-pointer hover:bg-white/5'
               }`}
             >
               {!project.disabled && (
-                <span className="absolute top-6 right-6 text-white/20 text-lg group-hover:text-white group-hover:-translate-y-1 group-hover:translate-x-1 transition-all duration-300">
-                  ↗
+                <span className="absolute right-6 top-6 text-lg text-white/20 transition-all duration-300 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-white">
+                  &rarr;
                 </span>
               )}
-              <p className="text-[10px] tracking-[0.3em] uppercase text-white/25">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-white/25">
                 {project.num}
               </p>
               <h3 className="heading-md text-white">{project.title}</h3>
               <p className="text-sm leading-relaxed text-white/45">
                 {project.desc}
               </p>
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="mt-2 flex flex-wrap gap-2">
                 {project.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-[10px] tracking-[0.15em] uppercase border border-white/15 px-3 py-1 text-white/40"
+                    className="border border-white/15 px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-white/40"
                   >
                     {tag}
                   </span>

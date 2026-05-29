@@ -12,16 +12,25 @@ export default function Background3D() {
       return;
     }
 
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    const isMobile = window.innerWidth < 768;
+    const pixelRatio = Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5);
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: !isMobile,
+      depth: false,
+      stencil: false,
+      powerPreference: 'high-performance',
+    });
+    renderer.setPixelRatio(pixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 30;
 
     const geometry = new THREE.BufferGeometry();
-    const count = 3000;
+    const count = isMobile ? 800 : 1600;
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count * 3; i++) {
       positions[i] = (Math.random() - 0.5) * 100;
@@ -67,9 +76,17 @@ export default function Background3D() {
     window.addEventListener('mousemove', handleMouse);
 
     let animId = 0;
-    const animate = () => {
+    let lastRender = 0;
+    const frameInterval = 1000 / 45;
+
+    const animate = (time = 0) => {
       animId = requestAnimationFrame(animate);
-      const t = Date.now() * 0.001;
+      if (document.hidden || time - lastRender < frameInterval) {
+        return;
+      }
+
+      lastRender = time;
+      const t = time * 0.001;
       points.rotation.y = t * 0.03;
       points.rotation.x = t * 0.01;
       wire.rotation.x = t * 0.15;
@@ -84,9 +101,12 @@ export default function Background3D() {
     animate();
 
     const handleResize = () => {
+      const nextIsMobile = window.innerWidth < 768;
+      const nextPixelRatio = Math.min(window.devicePixelRatio, nextIsMobile ? 1 : 1.5);
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(nextPixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
     };
     window.addEventListener('resize', handleResize);
 
@@ -94,6 +114,12 @@ export default function Background3D() {
       cancelAnimationFrame(animId);
       window.removeEventListener('mousemove', handleMouse);
       window.removeEventListener('resize', handleResize);
+      geometry.dispose();
+      material.dispose();
+      wireGeo.dispose();
+      wireMat.dispose();
+      wire2Geo.dispose();
+      wire2Mat.dispose();
       renderer.dispose();
     };
   }, []);
@@ -101,7 +127,8 @@ export default function Background3D() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-0 left-0 z-0 w-full h-full"
+      aria-hidden="true"
+      className="fixed top-0 left-0 z-0 h-full w-full pointer-events-none"
     />
   );
 }

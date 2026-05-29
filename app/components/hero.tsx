@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
+import IdCard3D from './IdCard3D';
 
 export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
@@ -38,34 +39,36 @@ export default function Hero() {
     <section
       ref={heroRef}
       id="hero"
-      className="relative z-10 min-h-screen flex flex-col justify-end pb-16 px-8 md:px-16"
+      className="relative z-10 flex min-h-screen flex-col justify-end overflow-hidden px-8 pb-16 pt-80 md:px-16 md:pt-40"
     >
-      <div className="overflow-hidden">
+      <IdCard3D />
+
+      <div data-parallax="0.05" className="overflow-hidden">
         <p className="hero-line text-xs tracking-[0.4em] uppercase text-white/40 mb-4">
           Student Developer — SMKN 1 Kota Bekasi
         </p>
       </div>
 
-      <div className="overflow-hidden">
+      <div data-parallax="0.12" className="overflow-hidden">
         <h1 className="hero-line heading-xl text-white">
           Your
         </h1>
       </div>
-      <div className="overflow-hidden">
+      <div data-parallax="0.18" className="overflow-hidden">
         <h1 className="hero-line heading-xl text-white">
           Name.
         </h1>
       </div>
 
-      <div className="overflow-hidden mt-2">
+      <div data-parallax="0.23" className="overflow-hidden mt-2">
         <p className="hero-line heading-md text-white/25">
           Aspiring Software Developer
         </p>
       </div>
 
-      <div className="hero-sub flex items-center gap-6 mt-10">
+      <div data-parallax="0.28" className="hero-sub flex items-center gap-6 mt-10">
         <button className="hero-cta flex items-center gap-3 bg-white text-black px-6 py-3 text-xs tracking-[0.2em] uppercase font-semibold hover:bg-white/85 transition-all">
-          View Projects ↗
+          View Projects 
         </button>
         <button className="hero-cta text-xs tracking-[0.2em] uppercase text-white/50 hover:text-white transition-all border border-white/20 px-6 py-3 hover:border-white/60">
           Contact Me
