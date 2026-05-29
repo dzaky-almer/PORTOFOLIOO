@@ -1,0 +1,33 @@
+.lanyard-wrapper {
+  position: absolute;
+  top: -10rem;
+  right: -18rem;
+  left: -18rem;
+  z-index: 40;
+  height: 150vh;
+  pointer-events: auto;
+  overflow: visible;
+}
+
+.lanyard-wrapper > div,
+.lanyard-wrapper canvas {
+  overflow: visible;
+}
+
+.lanyard-wrapper canvas {
+  cursor: grab;
+}
+
+.lanyard-wrapper canvas:active {
+  cursor: grabbing;
+}
+
+@media (max-width: 767px) {
+  .lanyard-wrapper {
+    top: -6rem;
+    right: -14rem;
+    left: -14rem;
+    height: 52rem;
+    opacity: 0.9;
+  }
+}

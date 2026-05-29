@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import IdCard3D from './IdCard3D';
+import Lanyard from './lanyard/Lanyard';
 
 export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
@@ -39,9 +39,9 @@ export default function Hero() {
     <section
       ref={heroRef}
       id="hero"
-      className="relative z-10 flex min-h-screen flex-col justify-end overflow-hidden px-8 pb-16 pt-80 md:px-16 md:pt-40"
+      className="relative z-10 flex min-h-screen flex-col justify-end overflow-visible px-8 pb-16 pt-80 md:px-16 md:pt-40"
     >
-      <IdCard3D />
+      <Lanyard position={[0, 0, 28]} gravity={[0, -40, 0]} fov={19} />
 
       <div data-parallax="0.05" className="overflow-hidden">
         <p className="hero-line text-xs tracking-[0.4em] uppercase text-white/40 mb-4">
