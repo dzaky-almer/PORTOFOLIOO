@@ -27,9 +27,9 @@ export default function Navbar() {
   return (
     <nav
       ref={navRef}
-      className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-8 md:px-16 py-5 border-b border-white/8 backdrop-blur-md bg-black/40"
+      className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-white/8 bg-black/40 px-8 py-5 backdrop-blur-md md:px-16"
     >
-      <div className="nav-item text-xs tracking-[0.3em] uppercase text-white font-medium">
+      <div className="nav-item text-[13px] font-semibold uppercase tracking-[0.22em] text-white">
         Dev.Portfolio
       </div>
 
@@ -38,7 +38,7 @@ export default function Navbar() {
           <button
             key={item}
             onClick={() => scrollTo(item)}
-            className="nav-item text-[11px] tracking-[0.2em] uppercase text-white/50 hover:text-white transition-colors duration-300"
+            className="nav-item text-xs font-medium uppercase tracking-[0.16em] text-white/45 transition-colors duration-300 hover:text-white"
           >
             {item}
           </button>

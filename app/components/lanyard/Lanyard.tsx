@@ -1,13 +1,15 @@
-/* eslint-disable react/no-unknown-property */
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, extend, useFrame } from '@react-three/fiber';
+import type { ThreeEvent } from '@react-three/fiber';
 import { Environment, Lightformer, useGLTF, useTexture } from '@react-three/drei';
 import {
   BallCollider,
   CuboidCollider,
   Physics,
+  type RapierRigidBody,
+  type RigidBodyProps,
   RigidBody,
   useRopeJoint,
   useSphericalJoint,
@@ -32,6 +34,22 @@ type BandProps = {
   maxSpeed?: number;
   minSpeed?: number;
   isMobile?: boolean;
+};
+
+type LanyardRigidBody = RapierRigidBody & {
+  lerped?: THREE.Vector3;
+};
+
+type CardGLTF = {
+  nodes: {
+    card: THREE.Mesh<THREE.BufferGeometry>;
+    cardFace?: THREE.Mesh<THREE.BufferGeometry>;
+    clip: THREE.Mesh<THREE.BufferGeometry>;
+    clamp: THREE.Mesh<THREE.BufferGeometry>;
+  };
+  materials: {
+    metal: THREE.Material;
+  };
 };
 
 export default function Lanyard({
@@ -97,29 +115,51 @@ export default function Lanyard({
 }
 
 function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }: BandProps) {
-  const band = useRef<any>(null);
-  const fixed = useRef<any>(null);
-  const j1 = useRef<any>(null);
-  const j2 = useRef<any>(null);
-  const j3 = useRef<any>(null);
-  const card = useRef<any>(null);
+  const band = useRef<THREE.Mesh<MeshLineGeometry, MeshLineMaterial>>(null!);
+  const fixed = useRef<LanyardRigidBody>(null!);
+  const j1 = useRef<LanyardRigidBody>(null!);
+  const j2 = useRef<LanyardRigidBody>(null!);
+  const j3 = useRef<LanyardRigidBody>(null!);
+  const card = useRef<LanyardRigidBody>(null!);
   const vec = new THREE.Vector3();
   const ang = new THREE.Vector3();
   const rot = new THREE.Vector3();
   const dir = new THREE.Vector3();
-  const segmentProps: any = {
+  const segmentProps: RigidBodyProps = {
     type: 'dynamic' as const,
     canSleep: true,
     colliders: false,
     angularDamping: 4,
     linearDamping: 4,
   };
-  const { nodes, materials } = useGLTF(cardGLB) as any;
-  const texture = useTexture(lanyard.src);
-  const cardTexture = useTexture(cardTextureImage.src);
-  const [curve] = useState(
-    () => new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]),
-  );
+  const { nodes, materials } = useGLTF(cardGLB) as unknown as CardGLTF;
+  const lanyardTexture = useTexture(lanyard.src);
+  const baseCardTexture = useTexture(cardTextureImage.src);
+  const texture = useMemo(() => {
+    const nextTexture = lanyardTexture.clone();
+    nextTexture.wrapS = THREE.RepeatWrapping;
+    nextTexture.wrapT = THREE.RepeatWrapping;
+    nextTexture.colorSpace = THREE.SRGBColorSpace;
+    nextTexture.needsUpdate = true;
+    return nextTexture;
+  }, [lanyardTexture]);
+  const cardTexture = useMemo(() => {
+    const nextTexture = baseCardTexture.clone();
+    nextTexture.colorSpace = THREE.SRGBColorSpace;
+    nextTexture.anisotropy = 16;
+    nextTexture.needsUpdate = true;
+    return nextTexture;
+  }, [baseCardTexture]);
+  const [curve] = useState(() => {
+    const nextCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+    ]);
+    nextCurve.curveType = 'chordal';
+    return nextCurve;
+  });
   const [dragged, drag] = useState<false | THREE.Vector3>(false);
   const [hovered, hover] = useState(false);
 
@@ -141,6 +181,13 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }: BandProps) {
       document.body.style.cursor = 'auto';
     };
   }, [hovered, dragged]);
+
+  useEffect(() => {
+    return () => {
+      texture.dispose();
+      cardTexture.dispose();
+    };
+  }, [cardTexture, texture]);
 
   useFrame((state, delta) => {
     if (dragged) {
@@ -168,23 +215,21 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }: BandProps) {
       ref.current.lerped.lerp(ref.current.translation(), delta * (minSpeed + clampedDistance * (maxSpeed - minSpeed)));
     });
 
+    const j1Lerped = j1.current.lerped;
+    const j2Lerped = j2.current.lerped;
+    if (!j1Lerped || !j2Lerped) {
+      return;
+    }
+
     curve.points[0].copy(j3.current.translation());
-    curve.points[1].copy(j2.current.lerped);
-    curve.points[2].copy(j1.current.lerped);
+    curve.points[1].copy(j2Lerped);
+    curve.points[2].copy(j1Lerped);
     curve.points[3].copy(fixed.current.translation());
     band.current.geometry.setPoints(curve.getPoints(isMobile ? 16 : 32));
     ang.copy(card.current.angvel());
     rot.copy(card.current.rotation());
-    card.current.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z });
+    card.current.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z }, true);
   });
-
-  curve.curveType = 'chordal';
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  texture.colorSpace = THREE.SRGBColorSpace;
-  cardTexture.colorSpace = THREE.SRGBColorSpace;
-  if (cardTexture) {
-    cardTexture.anisotropy = 16;
-  }
 
   return (
     <>
@@ -206,12 +251,12 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }: BandProps) {
             position={[0, -1.02, -0.05]}
             onPointerOver={() => hover(true)}
             onPointerOut={() => hover(false)}
-            onPointerUp={(event: any) => {
-              event.target.releasePointerCapture(event.pointerId);
+            onPointerUp={(event: ThreeEvent<PointerEvent>) => {
+              (event.target as Element | null)?.releasePointerCapture(event.pointerId);
               drag(false);
             }}
-            onPointerDown={(event: any) => {
-              event.target.setPointerCapture(event.pointerId);
+            onPointerDown={(event: ThreeEvent<PointerEvent>) => {
+              (event.target as Element | null)?.setPointerCapture(event.pointerId);
               drag(new THREE.Vector3().copy(event.point).sub(vec.copy(card.current.translation())));
             }}
           >

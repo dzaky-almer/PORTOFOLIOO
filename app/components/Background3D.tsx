@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { subscribeAnimationFrame } from '../lib/animationFrame';
 
 export default function Background3D() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -22,6 +23,7 @@ export default function Background3D() {
       stencil: false,
       powerPreference: 'high-performance',
     });
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight, false);
 
@@ -75,30 +77,37 @@ export default function Background3D() {
     };
     window.addEventListener('mousemove', handleMouse);
 
-    let animId = 0;
     let lastRender = 0;
     const frameInterval = 1000 / 45;
+    const timer = new THREE.Timer();
+    timer.connect(document);
 
-    const animate = (time = 0) => {
-      animId = requestAnimationFrame(animate);
-      if (document.hidden || time - lastRender < frameInterval) {
+    const render = (time: number) => {
+      timer.update(time);
+
+      const timerDelta = timer.getDelta();
+      if (document.hidden || timerDelta === 0 || time - lastRender < frameInterval) {
         return;
       }
 
+      const renderDelta = lastRender === 0 ? timerDelta : Math.min((time - lastRender) / 1000, 1 / 30);
       lastRender = time;
-      const t = time * 0.001;
+      const t = timer.getElapsed();
+      const cameraLerp = 1 - Math.exp(-6 * renderDelta);
+
       points.rotation.y = t * 0.03;
       points.rotation.x = t * 0.01;
       wire.rotation.x = t * 0.15;
       wire.rotation.y = t * 0.2;
       wire2.rotation.x = t * 0.1;
       wire2.rotation.z = t * 0.15;
-      camera.position.x += (mouseX * 5 - camera.position.x) * 0.02;
-      camera.position.y += (mouseY * 3 - camera.position.y) * 0.02;
+      camera.position.x += (mouseX * 5 - camera.position.x) * cameraLerp;
+      camera.position.y += (mouseY * 3 - camera.position.y) * cameraLerp;
       camera.lookAt(scene.position);
       renderer.render(scene, camera);
     };
-    animate();
+
+    const unsubscribe = subscribeAnimationFrame(render);
 
     const handleResize = () => {
       const nextIsMobile = window.innerWidth < 768;
@@ -111,7 +120,8 @@ export default function Background3D() {
     window.addEventListener('resize', handleResize);
 
     return () => {
-      cancelAnimationFrame(animId);
+      unsubscribe();
+      timer.dispose();
       window.removeEventListener('mousemove', handleMouse);
       window.removeEventListener('resize', handleResize);
       geometry.dispose();

@@ -1,8 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import Lenis from '@studio-freight/lenis';
+import Lenis from 'lenis';
+import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { subscribeAnimationFrame } from '../lib/animationFrame';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function SmoothScroll() {
   useEffect(() => {
@@ -16,20 +20,16 @@ export default function SmoothScroll() {
       syncTouch: false,
       wheelMultiplier: 1,
       touchMultiplier: 1.2,
+      autoRaf: false,
     });
     lenis.on('scroll', ScrollTrigger.update);
 
-    let frameId = 0;
-
-    function raf(time: number) {
+    const unsubscribe = subscribeAnimationFrame((time) => {
       lenis.raf(time);
-      frameId = requestAnimationFrame(raf);
-    }
-
-    frameId = requestAnimationFrame(raf);
+    });
 
     return () => {
-      cancelAnimationFrame(frameId);
+      unsubscribe();
       lenis.destroy();
     };
   }, []);
