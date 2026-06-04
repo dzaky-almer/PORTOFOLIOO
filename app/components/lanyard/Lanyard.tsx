@@ -54,7 +54,7 @@ type CardGLTF = {
 
 export default function Lanyard({
   position = [0, 0, 30],
-  gravity = [0, -40, 0],
+  gravity = [0, -35, 0], // OPSI 1: Reduced gravity for lighter, more responsive feel
   fov = 20,
   transparent = true,
 }: LanyardProps) {
@@ -114,7 +114,7 @@ export default function Lanyard({
   );
 }
 
-function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }: BandProps) {
+function Band({ maxSpeed = 65, minSpeed = 0, isMobile = false }: BandProps) { // OPSI 1: Increased maxSpeed from 50 to 65
   const band = useRef<THREE.Mesh<MeshLineGeometry, MeshLineMaterial>>(null!);
   const fixed = useRef<LanyardRigidBody>(null!);
   const j1 = useRef<LanyardRigidBody>(null!);
@@ -129,8 +129,8 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }: BandProps) {
     type: 'dynamic' as const,
     canSleep: true,
     colliders: false,
-    angularDamping: 4,
-    linearDamping: 4,
+    angularDamping: 2.5, // OPSI 1: Reduced from 4 for snappier rotation
+    linearDamping: 2.5,  // OPSI 1: Reduced from 4 for better throw response
   };
   const { nodes, materials } = useGLTF(cardGLB) as unknown as CardGLTF;
   const lanyardTexture = useTexture(lanyard.src);
