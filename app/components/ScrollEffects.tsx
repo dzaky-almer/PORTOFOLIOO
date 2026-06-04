@@ -8,11 +8,11 @@ gsap.registerPlugin(ScrollTrigger);
 
 const effectConfig = {
   fade: { opacity: 0, y: 28 },
-  'slide-up': { opacity: 0, y: 56 },
-  'slide-left': { opacity: 0, x: 72 },
-  'slide-right': { opacity: 0, x: -72 },
-  zoom: { opacity: 0, scale: 0.92 },
-  rotate: { opacity: 0, y: 44, rotate: -3 },
+  'slide-up': { opacity: 0, y: 56, z: -20, rotationX: 0.5 },
+  'slide-left': { opacity: 0, x: 72, z: -20, rotationY: -0.3 },
+  'slide-right': { opacity: 0, x: -72, z: -20, rotationY: 0.3 },
+  zoom: { opacity: 0, scale: 0.92, z: -50 },
+  rotate: { opacity: 0, y: 44, rotate: -3, z: -15 },
 };
 
 type ScrollEffect = keyof typeof effectConfig;
@@ -34,15 +34,19 @@ export default function ScrollEffects() {
         gsap.from(element, {
           ...fromVars,
           delay,
-          duration: 0.8,
-          ease: 'power3.out',
+          duration: 0.9,
+          ease: 'cubic.out',
           clearProps: 'transform,opacity',
           scrollTrigger: {
             trigger: element,
-            start: 'top 86%',
+            start: 'top 84%',
             once: true,
           },
           stagger: index * 0.01,
+          // Add perspective for cinematic 3D depth effect
+          transformOrigin: 'center center',
+          perspective: 1200,
+          overwrite: 'auto',
         });
       });
 

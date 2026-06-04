@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { subscribeAnimationFrame } from '../lib/animationFrame';
+import { subscribeAnimationFrame, getScrollY, getScrollVelocity } from '../lib/animationFrame';
 
 export default function Background3D() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -32,7 +32,7 @@ export default function Background3D() {
     camera.position.z = 30;
 
     const geometry = new THREE.BufferGeometry();
-    const count = isMobile ? 800 : 1600;
+    const count = isMobile ? 500 : 1600;
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count * 3; i++) {
       positions[i] = (Math.random() - 0.5) * 100;
@@ -95,14 +95,55 @@ export default function Background3D() {
       const t = timer.getElapsed();
       const cameraLerp = 1 - Math.exp(-6 * renderDelta);
 
-      points.rotation.y = t * 0.03;
-      points.rotation.x = t * 0.01;
-      wire.rotation.x = t * 0.15;
-      wire.rotation.y = t * 0.2;
-      wire2.rotation.x = t * 0.1;
-      wire2.rotation.z = t * 0.15;
-      camera.position.x += (mouseX * 5 - camera.position.x) * cameraLerp;
-      camera.position.y += (mouseY * 3 - camera.position.y) * cameraLerp;
+      // Calculate scroll progress and velocity
+      const maxScroll = Math.max((document.scrollingElement?.scrollHeight ?? document.body.scrollHeight) - window.innerHeight, 1);
+      const scrollProgress = Math.min(1, Math.max(0, getScrollY() / maxScroll));
+      const scrollVelocity = Math.abs(getScrollVelocity());
+      const normalizedVelocity = Math.min(1, scrollVelocity / 500); // Normalize velocity
+
+      // Floating particle animation with velocity boost
+      const verticalFloat = Math.sin(t * 0.3 + normalizedVelocity * 0.5) * 0.5;
+      points.position.y = verticalFloat + normalizedVelocity * 2; // Particles lift up when scrolling fast
+
+      // Dynamic particle opacity based on scroll
+      const particleOpacity = 0.6 - scrollProgress * 0.2; // Fade out slightly as scroll down
+      (material as THREE.PointsMaterial).opacity = Math.max(0.3, particleOpacity);
+
+      // Base rotations
+      points.rotation.y = t * 0.03 + normalizedVelocity * 0.1;
+      points.rotation.x = t * 0.01 + normalizedVelocity * 0.05;
+      
+      // Wireframe rotations synced with scroll and velocity
+      wire.rotation.x = t * 0.15 + scrollProgress * 0.3 + normalizedVelocity * 0.2;
+      wire.rotation.y = t * 0.2 - scrollProgress * 0.2 + normalizedVelocity * 0.15;
+      wire2.rotation.x = t * 0.1 + scrollProgress * 0.15 - normalizedVelocity * 0.1;
+      wire2.rotation.z = t * 0.15 + scrollProgress * 0.25 + normalizedVelocity * 0.12;
+      
+      // Camera mouse-based movement with velocity damping
+      const velocityDamping = 1 - normalizedVelocity * 0.3; // Reduce mouse effect when scrolling
+      camera.position.x += (mouseX * 5 * velocityDamping - camera.position.x) * cameraLerp * 0.7;
+      camera.position.y += (mouseY * 3 * velocityDamping - camera.position.y) * cameraLerp * 0.7;
+      
+      // Camera depth effect on scroll with velocity impact
+      const targetCameraZ = 30 - scrollProgress * 8 - normalizedVelocity * 3;
+      camera.position.z += (targetCameraZ - camera.position.z) * cameraLerp * 0.5;
+      
+      // Cinematic FOV changes based on scroll and velocity
+      const baseFOV = 75;
+      const targetFOV = baseFOV - scrollProgress * 5 - normalizedVelocity * 3;
+      camera.fov += (targetFOV - camera.fov) * cameraLerp * 0.3;
+      camera.updateProjectionMatrix();
+      
+      // Advanced lighting: adjust background brightness based on scroll
+      const lightIntensity = 1 - scrollProgress * 0.2;
+      (material as THREE.PointsMaterial).color.multiplyScalar(lightIntensity);
+      
+      // Layered parallax: wireframes move at different speeds
+      const parallaxDepth1 = scrollProgress * 5;
+      const parallaxDepth2 = scrollProgress * 3;
+      wire.position.z = parallaxDepth1;
+      wire2.position.z = -parallaxDepth2;
+      
       camera.lookAt(scene.position);
       renderer.render(scene, camera);
     };

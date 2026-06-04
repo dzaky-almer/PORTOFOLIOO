@@ -15,12 +15,14 @@ export default function SmoothScroll() {
     }
 
     const lenis = new Lenis({
-      lerp: 0.22,
+      lerp: 0.08,
       smoothWheel: true,
-      syncTouch: false,
-      wheelMultiplier: 1,
-      touchMultiplier: 1.2,
+      syncTouch: true,
+      wheelMultiplier: 1.2,
+      touchMultiplier: 1.5,
       autoRaf: false,
+      duration: 1.2,
+      easing: (t) => 1 - Math.pow(1 - t, 3),
     });
     lenis.on('scroll', ScrollTrigger.update);
 
